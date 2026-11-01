@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Biz Office</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f2f5f2;color:#1c3028;font-family:Arial,sans-serif}
+header{background:#155e52;color:white;padding:20px}
+header h1{margin:0;font-size:25px}
+header p{margin:5px 0 0;font-size:13px}
+nav{display:flex;overflow:auto;background:#fff;padding:8px;gap:5px;position:sticky;top:0}
+nav button{border:0;background:#e8efea;padding:11px;border-radius:8px;white-space:nowrap}
+nav button.active{background:#155e52;color:white}
+main{padding:14px;max-width:850px;margin:auto}
+h2{font-size:20px}
+.card{background:white;border:1px solid #e0e8e1;border-radius:13px;padding:15px;margin-bottom:13px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:white;padding:14px;border-radius:12px;border:1px solid #e0e8e1}
+.stat small{color:#65766d}
+.stat strong{display:block;font-size:20px;margin-top:8px}
+button{cursor:pointer}
+.action{background:#155e52;color:white;border:0;border-radius:9px;padding:12px;font-weight:bold}
+.secondary{background:#e7eee9;color:#155e52;border:0;border-radius:9px;padding:11px}
+input,select{width:100%;padding:12px;border:1px solid #ccd8cf;border-radius:8px;margin:5px 0 13px;background:white}
+label{font-size:13px;font-weight:bold}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{text-align:left;padding:10px 5px;border-bottom:1px solid #e8eee9}
+th{color:#64756c}
+.muted{color:#718078;font-size:13px}
+.hidden{display:none}
+.notice{background:#fff5dc;padding:12px;border-radius:9px;font-size:13px}
+footer{text-align:center;color:#829087;font-size:11px;padding:20px}
+</style>
+</head>
+<body>
+<header>
+<h1>Biz Office</h1>
+<p>Your business. Your numbers. Your growth.</p>
+</header>
+<nav>
+<button class="active" data-page="home">Overview</button>
+<button data-page="products">Stock</button>
+<button data-page="sales">Sales</button>
+<button data-page="expenses">Expenses</button>
+<button data-page="reports">Reports</button>
+<button data-page="growth">Growth tips</button>
+</nav>
+<main>
+<section id="home">
+<h2>Business overview</h2>
+<p class="muted">Your figures update as you record business activity.</p>
+<div class="stats">
+<div class="stat"><small>Sales recorded</small><strong id="totalSales">R0.00</strong></div>
+<div class="stat"><small>Gross profit estimate</small><strong id="profit">R0.00</strong></div>
+<div class="stat"><small>Stock value at cost</small><strong id="stockValue">R0.00</strong></div>
+<div class="stat"><small>Expenses recorded</small><strong id="totalExpenses">R0.00</strong></div>
+</div>
+<div class="card">
+<h3>Quick actions</h3>
+<button class="action" onclick="page('sales')">Record a sale</button>
+<button class="secondary" onclick="page('products')">Add or receive stock</button>
+<button class="secondary" onclick="page('expenses')">Record expense</button>
+</div>
+<div class="card"><h3>Recent activity</h3><div id="activity" class="muted">No business activity recorded yet.</div></div>
+</section>
+
+<section id="products" class="hidden">
+<h2>Stock and products</h2>
+<div class="card">
+<h3>Add a product</h3>
+<form id="productForm">
+<label>Product name</label><input id="pname" required placeholder="e.g. Cooking oil">
+<label>Brand (optional)</label><input id="brand" placeholder="Brand name">
+<div class="row">
+<div><label>Number in purchase bundle</label><input id="bundle" type="number" min="1" value="1" required></div>
+<div><label>Bundle cost (R)</label><input id="bundleCost" type="number" min="0" step=".01" required></div>
+</div>
+<div class="muted" id="unitCost">Cost per sellable unit: R0.00</div>
+<div class="row">
+<div><label>Selling price per unit (R)</label><input id="price" type="number" min="0" step=".01" required></div>
+<div><label>Opening stock (units)</label><input id="quantity" type="number" min="0" required></div>
+</div>
+<label>Low-stock warning level</label><input id="alertLevel" type="number" min="0" value="5">
+<button class="action">Save product</button>
+</form>
+<p class="muted">Example: 24 packets costing R120 means each packet costs R5.</p>
+</div>
+<div class="card">
+<h3>Your inventory</h3>
+<div id="inventory">No products added yet.</div>
+</div>
+<div class="card">
+<h3>Receive more stock</h3>
+<label>Select product</label><select id="receiveProduct"></select>
+<label>Quantity received</label><input id="receiveQty" type="number" min="1">
+<button class="action" onclick="receiveStock()">Update stock</button>
+</div>
+</section>
+
+<section id="sales" class="hidden">
+<h2>Record a sale</h2>
+<div class="card">
+<form id="saleForm">
+<label>Product</label><select id="saleProduct" required></select>
+<label>Quantity sold</label><input id="saleQty" type="number" min="1" value="1" required>
+<label>Selling price per unit (R)</label><input id="salePrice" type="number" min="0" step=".01" required>
+<button class="action">Save sale</button>
+</form>
+</div>
+<div class="card"><h3>Sales history</h3><div id="salesHistory">No sales recorded yet.</div></div>
+</section>
+
+<section id="expenses" class="hidden">
+<h2>Business expenses</h2>
+<div class="card">
+<form id="expenseForm">
+<label>Description</label><input id="expenseName" required placeholder="e.g. Transport">
+<label>Category</label>
+<select id="category"><option>Transport</option><option>Rent</option><option>Electricity</option><option>Wages</option><option>Packaging</option><option>Marketing</option><option>Other</option></select>
+<label>Amount (R)</label><input id="amount" type="number" min=".01" step=".01" required>
+<button class="action">Save expense</button>
+</form>
+</div>
+<div class="card"><h3>Expense history</h3><div id="expenseHistory">No expenses recorded yet.</div></div>
+</section>
+
+<section id="reports" class="hidden">
+<h2>Business reports</h2>
+<div class="card" id="report"></div>
+<div class="card">
+<h3>Important note</h3>
+<p class="muted">These are management estimates based on the records entered. They are not audited financial statements or tax calculations.</p>
+<button class="secondary" onclick="window.print()">Print report</button>
+</div>
+</section>
+
+<section id="growth" class="hidden">
+<h2>Growth assistant</h2>
+<div class="card"><h3>Stock advice</h3><div id="stockAdvice">Add products to receive stock advice.</div></div>
+<div class="card">
+<h3>Business improvement ideas</h3>
+<ul>
+<li>Record every sale, including cash sales.</li>
+<li>Keep personal spending separate from business money.</li>
+<li>Compare selling prices with your actual unit costs.</li>
+<li>Watch which products sell slowly before reordering.</li>
+<li>Build a customer list and encourage repeat purchases.</li>
+</ul>
+</div>
+</section>
+</main>
+<footer>Biz Office · Business management assistant</footer>
+
+<script>
+const get=(key,def)=>{try{return JSON.parse(localStorage.getItem(key))||def}catch(e){return def}};
+let products=get('biz_products',[]);
+let sales=get('biz_sales',[]);
+let expenses=get('biz_expenses',[]);
+const save=()=>{
+localStorage.setItem('biz_products',JSON.stringify(products));
+localStorage.setItem('biz_sales',JSON.stringify(sales));
+localStorage.setItem('biz_expenses',JSON.stringify(expenses));
+render();
+};
+const money=n=>'R'+Number(n||0).toLocaleString('en-ZA',{minimumFractionDigits:2,maximumFractionDigits:2});
+function page(name){
+document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));
+document.getElementById(name).classList.remove('hidden');
+document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===name));
+render();
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>page(b.dataset.page));
+function options(){
+let html=products.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+document.getElementById('saleProduct').innerHTML=html;
+document.getElementById('receiveProduct').innerHTML=html;
+}
+function render(){
+let revenue=sales.reduce((a,s)=>a+s.total,0);
+let cost=sales.reduce((a,s)=>a+s.cost,0);
+let exp=expenses.reduce((a,e)=>a+e.amount,0);
+let stock=products.reduce((a,p)=>a+p.qty*p.cost,0);
+document.getElementById('totalSales').textContent=money(revenue);
+document.getElementById('profit').textContent=money(revenue-cost);
+document.getElementById('stockValue').textContent=money(stock);
+document.getElementById('totalExpenses').textContent=money(exp);
+document.getElementById('inventory').innerHTML=products.length?`<table><tr><th>Product</th><th>Stock</th><th>Unit cost</th><th>Price</th></tr>${products.map(p=>`<tr><td>${p.name}</td><td>${p.qty}${p.qty<=p.alert?' ⚠️':''}</td><td>${money(p.cost)}</td><td>${money(p.price)}</td></tr>`).join('')}</table>`:'No products added yet.';
+document.getElementById('salesHistory').innerHTML=sales.length?`<table><tr><th>Product</th><th>Qty</th><th>Total</th></tr>${sales.map(s=>`<tr><td>${s.name}</td><td>${s.qty}</td><td>${money(s.total)}</td></tr>`).join('')}</table>`:'No sales recorded yet.';
+document.getElementById('expenseHistory').innerHTML=expenses.length?`<table><tr><th>Description</th><th>Category</th><th>Amount</th></tr>${expenses.map(e=>`<tr><td>${e.name}</td><td>${e.category}</td><td>${money(e.amount)}</td></tr>`).join('')}</table>`:'No expenses recorded yet.';
+document.getElementById('activity').textContent=sales.length+' sales and '+expenses.length+' expenses recorded.';
+document.getElementById('report').innerHTML=`<h3>Financial summary</h3><p>Sales revenue: <b>${money(revenue)}</b></p><p>Estimated cost of goods sold: <b>${money(cost)}</b></p><p>Estimated gross profit: <b>${money(revenue-cost)}</b></p><p>Operating expenses: <b>${money(exp)}</b></p><hr><p>Estimated balance after recorded expenses: <b>${money(revenue-cost-exp)}</b></p>`;
+let low=products.filter(p=>p.qty<=p.alert);
+document.getElementById('stockAdvice').innerHTML=low.length?low.map(p=>`<p><b>${p.name}</b>: Only ${p.qty} units left. Consider checking whether you need to reorder.</p>`).join(''):'No low-stock warnings. Keep recording stock movements.';
+options();
+}
+document.getElementById('bundle').oninput=unitPreview;
+document.getElementById('bundleCost').oninput=unitPreview;
+function unitPreview(){
+let b=Math.max(1,+document.getElementById('bundle').value||1);
+let c=+document.getElementById('bundleCost').value||0;
+document.getElementById('unitCost').textContent='Cost per sellable unit: '+money(c/b);
+}
+document.getElementById('productForm').onsubmit=e=>{
+e.preventDefault();
+let b=Math.max(1,+bundle.value);
+let c=+bundleCost.value;
+products.push({id:Date.now(),name:pname.value,brand:brand.value,cost:c/b,price:+price.value,qty:+quantity.value,alert:+alertLevel.value});
+save();e.target.reset();bundle.value=1;alert('Product saved.');
+};
+document.getElementById('saleProduct').onchange=()=>{
+let p=products.find(x=>x.id==saleProduct.value);
+if(p)salePrice.value=p.price;
+};
+document.getElementById('saleForm').onsubmit=e=>{
+e.preventDefault();
+let p=products.find(x=>x.id==saleProduct.value),q=+saleQty.value,price=+salePrice.value;
+if(!p)return;
+if(q>p.qty){alert('Not enough stock available.');return;}
+p.qty-=q;
+sales.unshift({name:p.name,qty:q,total:q*price,cost:q*p.cost,date:new Date().toISOString()});
+save();e.target.reset();alert('Sale recorded and stock reduced.');
+};
+function receiveStock(){
+let p=products.find(x=>x.id==receiveProduct.value),q=+receiveQty.value;
+if(!p||q<1){alert('Choose a product and enter a valid quantity.');return;}
+p.qty+=q;receiveQty.value='';save();alert('Stock updated.');
+}
+document.getElementById('expenseForm').onsubmit=e=>{
+e.preventDefault();
+expenses.unshift({name:expenseName.value,category:category.value,amount:+amount.value,date:new Date().toISOString()});
+save();e.target.reset();alert('Expense saved.');
+};
+render();
+</script>
+</body>
+</html>
