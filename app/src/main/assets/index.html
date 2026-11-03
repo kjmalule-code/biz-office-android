@@ -148,7 +148,12 @@ th{color:#65746b;font-size:11px;text-transform:uppercase}
     <button type="button" class="voice-btn" onclick="startVoiceFor('pName')">🎙</button>
   </div>
 </label>
-   <label class="field">Brand<input id="pBrand" placeholder="e.g. Bakers"></label>
+   <label class="field">Brand
+  <div class="voice-row">
+    <input id="pBrand" placeholder="e.g. Bakers">
+    <button type="button" class="voice-btn" onclick="startVoiceFor('pBrand')">🎙</button>
+  </div>
+</label>
    <label class="field">Size<input id="pSize" type="number" min="0" step=".01" placeholder="e.g. 750"></label>
    <label class="field">Size unit
     <select id="pUnit"><option value="unit">Unit / each</option><option>g</option><option>kg</option><option>ml</option><option>L</option><option>pack</option></select>
