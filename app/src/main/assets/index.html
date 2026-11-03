@@ -189,7 +189,12 @@ th{color:#65746b;font-size:11px;text-transform:uppercase}
  <div class="panel">
   <h3>Record an expense</h3>
   <form id="expenseForm">
-   <label class="field full">Description<input id="eDesc" required placeholder="e.g. Transport"></label>
+   <label class="field">Expense description
+  <div class="voice-row">
+    <input id="eDesc" placeholder="e.g. Transport, rent" required>
+    <button type="button" class="voice-btn" onclick="startVoiceFor('eDesc')">🎙</button>
+  </div>
+</label>
    <label class="field">Category
     <select id="eCategory"><option>Transport</option><option>Rent</option><option>Utilities</option><option>Wages</option><option>Packaging</option><option>Other</option></select>
    </label>
