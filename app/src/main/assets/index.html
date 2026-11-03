@@ -142,7 +142,12 @@ th{color:#65746b;font-size:11px;text-transform:uppercase}
  <div class="panel">
   <h3 id="productHeading">Add a product</h3>
   <form id="productForm">
-   <label class="field">Product name<input id="pName" required placeholder="e.g. Cream biscuits"></label>
+   <label class="field">Product name
+  <div class="voice-row">
+    <input id="pName" placeholder="e.g. Cream biscuits" required>
+    <button type="button" class="voice-btn" onclick="startVoiceFor('pName')">🎙</button>
+  </div>
+</label>
    <label class="field">Brand<input id="pBrand" placeholder="e.g. Bakers"></label>
    <label class="field">Size<input id="pSize" type="number" min="0" step=".01" placeholder="e.g. 750"></label>
    <label class="field">Size unit
