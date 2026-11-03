@@ -1,20 +1,141 @@
 package com.bizoffice
 
+import android.Manifest
 import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.speech.RecognizerIntent
+import android.speech.RecognitionListener
+import android.speech.SpeechRecognizer
+import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import org.json.JSONObject
 
 class MainActivity : Activity() {
+
+    private lateinit var webView: WebView
+    private var speechRecognizer: SpeechRecognizer? = null
+    private var pendingField = ""
+    private var pendingLanguage = "en-ZA"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val webView = WebView(this)
+        webView = WebView(this)
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
         webView.webViewClient = WebViewClient()
-        webView.loadUrl("file:///android_asset/index.html")
+
+        webView.addJavascriptInterface(VoiceBridge(), "BizOfficeVoice")
 
         setContentView(webView)
+        webView.loadUrl("file:///android_asset/index.html")
+    }
+
+    inner class VoiceBridge {
+        @JavascriptInterface
+        fun startVoice(fieldId: String, language: String) {
+            runOnUiThread {
+                if (fieldId !in listOf("pName", "pBrand", "eDesc")) {
+                    showError(fieldId, "This field cannot use voice input.")
+                    return@runOnUiThread
+                }
+
+                pendingField = fieldId
+                pendingLanguage = language
+
+                if (!SpeechRecognizer.isRecognitionAvailable(this@MainActivity)) {
+                    showError(fieldId, "Voice recognition is not available on this phone.")
+                    return@runOnUiThread
+                }
+
+                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                    != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 100)
+                } else {
+                    startListening()
+                }
+            }
+        }
+    }
+
+    private fun startListening() {
+        try {
+            speechRecognizer?.destroy()
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+
+            speechRecognizer?.setRecognitionListener(object : RecognitionListener {
+                override fun onReadyForSpeech(params: Bundle?) {}
+                override fun onBeginningOfSpeech() {}
+                override fun onRmsChanged(rmsdB: Float) {}
+                override fun onBufferReceived(buffer: ByteArray?) {}
+                override fun onEndOfSpeech() {}
+
+                override fun onError(error: Int) {
+                    showError(pendingField, "Sorry, voice input did not work. Please try again.")
+                }
+
+                override fun onResults(results: Bundle?) {
+                    val matches = results?.getStringArrayList(
+                        SpeechRecognizer.RESULTS_RECOGNITION
+                    )
+                    val spokenText = matches?.firstOrNull() ?: ""
+                    val field = JSONObject.quote(pendingField)
+                    val text = JSONObject.quote(spokenText)
+
+                    webView.evaluateJavascript(
+                        "window.bizOfficeVoiceResult($field, $text);", null
+                    )
+                }
+
+                override fun onPartialResults(partialResults: Bundle?) {}
+                override fun onEvent(eventType: Int, params: Bundle?) {}
+            })
+
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            intent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, pendingLanguage)
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, pendingLanguage)
+
+            speechRecognizer?.startListening(intent)
+
+        } catch (e: Exception) {
+            showError(pendingField, "Could not start voice input. Please try again.")
+        }
+    }
+
+    private fun showError(field: String, message: String) {
+        val safeField = JSONObject.quote(field)
+        val safeMessage = JSONObject.quote(message)
+        webView.evaluateJavascript(
+            "window.bizOfficeVoiceError($safeField, $safeMessage);", null
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == 100) {
+            if (grantResults.isNotEmpty() &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startListening()
+            } else {
+                showError(pendingField, "Microphone permission was not granted.")
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        speechRecognizer?.destroy()
+        super.onDestroy()
     }
 }
