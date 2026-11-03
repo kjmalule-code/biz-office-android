@@ -596,6 +596,32 @@ $('eDate').value=today();
 $('saleType').onchange();
 renderAll();
 updateUnitCost();
+function startVoiceFor(id) {
+  const languageName = $('language').value;
+  const languageMap = {
+    English: 'en-ZA',
+    Sesotho: 'st-ZA',
+    isiZulu: 'zu-ZA',
+    Setswana: 'tn-ZA'
+  };
+
+  if (window.BizOfficeVoice) {
+    window.BizOfficeVoice.startVoice(id, languageMap[languageName] || 'en-ZA');
+  } else {
+    alert('Voice input is available in the Android app.');
+  }
+}
+
+window.bizOfficeVoiceResult = (id, text) => {
+  const field = $(id);
+  if (field) {
+    field.value = text;
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.focus();
+  }
+};
+
+window.bizOfficeVoiceError = (id, message) => alert(message);
 </script>
 </body>
 </html>
